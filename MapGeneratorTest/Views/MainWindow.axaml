@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MapGeneratorTest.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:zoomAndPan="clr-namespace:AFRDL.Utils.ZoomAndPan"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="MapGeneratorTest.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="MapGeneratorTest">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="*, Auto">
+		<Grid Grid.Column="0">
+            <zoomAndPan:ZoomBorder x:Name="Zap" ZoomSpeed="1.2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Stretch="None" PanButton="Left">
+                <Image Source="{Binding Map.Image}" RenderOptions.BitmapInterpolationMode="Default"/>
+            </zoomAndPan:ZoomBorder>
+		</Grid>
+        <Grid Grid.Column="1">
+			<Grid ColumnDefinitions="Auto, Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto" Margin="3">
+				<TextBlock Grid.Row="0" Grid.Column="0" Text="RoomMinW"/>
+				<TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Map.RoomMinW}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="1" Grid.Column="0" Text="RoomMinH"/>
+				<TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Map.RoomMinH}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="2" Grid.Column="0" Text="RoomMaxW"/>
+				<TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Map.RoomMaxW}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="3" Grid.Column="0" Text="RoomMaxH"/>
+				<TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Map.RoomMaxH}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="4" Grid.Column="0" Text="MinRoomCount"/>
+				<TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Map.MinRoomCount}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="5" Grid.Column="0" Text="MaxRoomCount"/>
+				<TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Map.MaxRoomCount}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="6" Grid.Column="0" Text="MinDistanceBetweenRooms"/>
+				<TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Map.MinDistanceBetweenRooms}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="7" Grid.Column="0" Text="MaxDistanceBetweenRooms"/>
+				<TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Map.MaxDistanceBetweenRooms}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="8" Grid.Column="0" Text="MinDistanceFromCornerToCorridor"/>
+				<TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Map.MinDistanceFromCornerToCorridor}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="9" Grid.Column="0" Text="MaxDistanceFromCornerToCorridor"/>
+				<TextBox Grid.Row="9" Grid.Column="1" Text="{Binding Map.MaxDistanceFromCornerToCorridor}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<TextBlock Grid.Row="10" Grid.Column="0" Text="Seed"/>
+				<TextBox Grid.Row="10" Grid.Column="1" Text="{Binding Map.Seed}" MinWidth="50" HorizontalContentAlignment="Center"/>
+				<Button Grid.Row="20" Grid.Column="0" Grid.ColumnSpan="2" Content="Generate" Command="{Binding RegenerateMapCmd}"/>
+			</Grid>
+        </Grid>
+
+    </Grid>
+
+</Window>
