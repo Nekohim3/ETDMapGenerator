@@ -36,7 +36,8 @@ public static class RectangleExtension
 
     public static SKRectI Multiple(this SKRectI r, int n) => r with {Left = r.Left * n, Top = r.Top * n, Right = r.Right * n, Bottom = r.Bottom * n};
 
-    public static SKPoint GetMidPoint(this SKRectI r)               => new(r.MidX, r.MidY);
+    public static SKPoint GetMidPoint(this SKRectI r)                   => new(r.MidX, r.MidY);
+    public static SKPointI GetMidPointI(this SKRectI r)                   => new(r.MidX, r.MidY);
     public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with {X = p.X + x, Y = p.Y + y};
 
     public static double GetAngleToRect(this SKRectI  r, SKRectI  other) => GetAngleTo(r.GetMidPoint(), other.GetMidPoint());

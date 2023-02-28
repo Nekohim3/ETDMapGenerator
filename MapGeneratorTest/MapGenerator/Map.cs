@@ -121,35 +121,6 @@ public class Map : ViewModelBase
 
     public Map(int roomMinW, int roomMinH, int roomMaxW, int roomMaxH, int minRoomCount, int maxRoomCount, int minDistanceBetweenRooms, int maxDistanceBetweenRooms, int? seed = null)
     {
-        var p0 = new SKPoint(0,  0);
-
-        var p1 = new SKPoint(-1, -1);
-        var p2 = new SKPoint(0,  -1);
-        var p3 = new SKPoint(1,  -1);
-        var p4 = new SKPoint(1,  0);
-        var p5 = new SKPoint(1,  1);
-        var p6 = new SKPoint(0,  1);
-        var p7 = new SKPoint(-1, 1);
-        var p8 = new SKPoint(-1, 0);
-
-        var q1 = p0.GetAngleTo(p1);
-        var q2 = p0.GetAngleTo(p2);
-        var q3 = p0.GetAngleTo(p3);
-        var q4 = p0.GetAngleTo(p4);
-        var q5 = p0.GetAngleTo(p5);
-        var q6 = p0.GetAngleTo(p6);
-        var q7 = p0.GetAngleTo(p7);
-        var q8 = p0.GetAngleTo(p8);
-
-        var w1 = p0.GetDirectionTo(p1);
-        var w2 = p0.GetDirectionTo(p2);
-        var w3 = p0.GetDirectionTo(p3);
-        var w4 = p0.GetDirectionTo(p4);
-        var w5 = p0.GetDirectionTo(p5);
-        var w6 = p0.GetDirectionTo(p6);
-        var w7 = p0.GetDirectionTo(p7);
-        var w8 = p0.GetDirectionTo(p8);
-
         _roomMinW                       = roomMinW;
         _roomMinH                       = roomMinH;
         _roomMaxW                       = roomMaxW;
@@ -218,21 +189,34 @@ public class Map : ViewModelBase
                 if(PassExist(x, c)) continue;
                 if (c.Rect.Right  > x.Rect.Left + 2 && c.Rect.Left < x.Rect.Right  - 2)
                 {
-                    var passX      = (Math.Max(x.Rect.Left, c.Rect.Left) + Math.Min(x.Rect.Right, c.Rect.Right)) / 2;
+                    var passX = GetRand(Math.Max(x.Rect.Left, c.Rect.Left) + 1, Math.Min(x.Rect.Right, c.Rect.Right) - 1); //(Math.Max(x.Rect.Left, c.Rect.Left) + Math.Min(x.Rect.Right, c.Rect.Right)) / 2;
                     Passes.Add(x.Rect.Bottom < c.Rect.Top
                                    ? new Pass(x, c, new SKPointI(passX - x.Rect.Left, x.Rect.Height), new SKPointI(passX - c.Rect.Left, 0))
                                    : new Pass(x, c, new SKPointI(passX - x.Rect.Left, 0),             new SKPointI(passX - c.Rect.Left, c.Rect.Height)));
                 }
                 else if (c.Rect.Bottom > x.Rect.Top + 2 && c.Rect.Top < x.Rect.Bottom - 2)
                 {
-                    var passY      = (Math.Max(x.Rect.Top, c.Rect.Top) + Math.Min(x.Rect.Bottom, c.Rect.Bottom)) / 2;
+                    var passY = GetRand(Math.Max(x.Rect.Top, c.Rect.Top) + 1, Math.Min(x.Rect.Bottom, c.Rect.Bottom) - 1); //(Math.Max(x.Rect.Top, c.Rect.Top) + Math.Min(x.Rect.Bottom, c.Rect.Bottom)) / 2;
 
                     Passes.Add(x.Rect.Right < c.Rect.Left
                                    ? new Pass(x, c, new SKPointI(x.Rect.Width, passY - x.Rect.Top), new SKPointI(0, passY - c.Rect.Top))
                                    : new Pass(x, c, new SKPointI(0,passY - x.Rect.Top),             new SKPointI(c.Rect.Width, passY - c.Rect.Top)));
                 }
+                else
+                {
+                    var excluded = new List<Pass>();
+                    if (!GetNearestRooms(x).Where(_ => _ != c).Intersect(GetNearestRooms(c).Where(_ => _ != x)).Any() || MaxDistanceFromCornerToCorridor == 7)
+                    {
+                        Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                    }
+                }
 
             }
+        }
+
+        foreach (var x in Passes)
+        {
+            
         }
         return false;
     }
@@ -262,6 +246,18 @@ public class Map : ViewModelBase
     {
         var sbmp = new Sbmp(1000, 1000);
         sbmp.Fill(SKColors.Gray);
+        foreach (var x in Rooms)
+            sbmp.DrawOutlinedRectangle(x.Rect.ExpandAll(MinDistanceBetweenRooms), new SKColor(0, 150, 50, 255), 1);
+        foreach (var x in Rooms)
+        {
+            var rect = x.Rect.ExpandAll(MaxDistanceBetweenRooms);
+            sbmp.DrawLine(new SKPoint(rect.Left,  rect.Top),    new SKPoint(x.Rect.Left,  x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
+            sbmp.DrawLine(new SKPoint(rect.Right, rect.Top),    new SKPoint(x.Rect.Right, x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
+            sbmp.DrawLine(new SKPoint(rect.Left,  rect.Bottom), new SKPoint(x.Rect.Left,  x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
+            sbmp.DrawLine(new SKPoint(rect.Right, rect.Bottom), new SKPoint(x.Rect.Right, x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
+            sbmp.DrawOutlinedRectangle(rect, new SKColor(150,                                                              50, 50, 255), 1);
+        }
+
         foreach (var x in Rooms)
             sbmp.DrawFillRectangle(x.Rect, new SKColor(0, 50, 255, 255));
 
@@ -320,5 +316,5 @@ public class Map : ViewModelBase
         return !Rooms.Any(_ => _.Rect.ExpandAll(MinDistanceBetweenRooms).IntersectsWith(r.Rect)) && Rooms.Any(_ => _.Rect.ExpandAll(MaxDistanceBetweenRooms).IntersectsWith(r.Rect)) && (Rooms.Count < 3 || GetNearestRooms(r).Count > 1);
     }
 
-    private int GetRand(int min, int max) => _rand.Next(min, max);
+    private int GetRand(int min, int max) => min <= max ? _rand.Next(min, max) : _rand.Next(max, min);
 }
