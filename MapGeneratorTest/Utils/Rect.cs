@@ -34,11 +34,16 @@ public static class RectangleExtension
     public static SKRectI ExpandAll(this    SKRectI r, int n)                                    => r.ExpandWidth(n).ExpandHeight(n);
     public static SKRectI Expand(this       SKRectI r, int left, int top, int right, int bottom) => r.ExpandLeft(left).ExpandTop(top).ExpandRight(right).ExpandBottom(bottom);
 
+    public static SKLineI GetTopLine(this SKRectI r) => new(new SKPointI(r.Left, r.Top), new SKPointI(r.Right, r.Top));
+
     public static SKRectI Multiple(this SKRectI r, int n) => r with {Left = r.Left * n, Top = r.Top * n, Right = r.Right * n, Bottom = r.Bottom * n};
 
     public static SKPoint GetMidPoint(this SKRectI r)                   => new(r.MidX, r.MidY);
     public static SKPointI GetMidPointI(this SKRectI r)                   => new(r.MidX, r.MidY);
     public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with {X = p.X + x, Y = p.Y + y};
+
+    public static SKPointI GetXYStepsCount(this SKRectI r, SKRectI other) => new SKPointI(Math.Abs(r.MidX - other.MidX), Math.Abs(r.MidY - other.MidX));
+    public static int      GetStepsCount(this   SKRectI r, SKRectI other) => GetXYStepsCount(r, other).X + GetXYStepsCount(r, other).Y; 
 
     public static double GetAngleToRect(this SKRectI  r, SKRectI  other) => GetAngleTo(r.GetMidPoint(), other.GetMidPoint());
     public static double GetAngleTo(this     SKPoint p, SKPoint other)
@@ -47,6 +52,29 @@ public static class RectangleExtension
         if(angle < 0) angle += 360;
         return angle;
     }
+
+    public static SKPoint IsIntersect(this SKLine l, SKLine other)
+    {
+        var dx12 = l.End.X - l.Start.X;
+        var dy12 = l.End.Y - l.Start.Y;
+        var dx34 = other.End.X - other.Start.X;
+        var dy34 = other.End.Y - other.Start.Y;
+
+        var denominator = (dy12 * dx34 - dx12 * dy34);
+
+        var t1 = ((l.Start.X - other.Start.X) * dy34 + (other.Start.Y - l.Start.Y) * dx34) / denominator;
+        if (float.IsInfinity(t1))
+            return default;
+
+        var t2 = ((other.Start.X - l.Start.X) * dy12 + (l.Start.Y - other.Start.Y) * dx12) / -denominator;
+        var intersection = new SKPoint(l.Start.X + dx12 * t1, l.Start.Y + dy12 * t1);
+        if ((t1 is >= 0 and <= 1 && t2 is >= 0 and <= 1))
+            return intersection;
+
+        return default;
+    }
+
+    public static SKPoint IsIntersectI(this SKLineI l, SKLineI other) => IsIntersect(new SKLine(l.Start, l.End), new SKLine(other.Start, other.End));
 
     public static AngleDirection GetDirection(double angle)
     {

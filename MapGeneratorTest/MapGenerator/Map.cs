@@ -118,9 +118,82 @@ public class Map : ViewModelBase
     }
 
     private Random _rand;
+    // Find the point of intersection between
+    // the lines p1 --> p2 and p3 --> p4.
+    private void FindIntersection(
+        SKPoint     p1,              SKPoint  p2, SKPoint p3, SKPoint p4,
+        out bool    lines_intersect, out bool segments_intersect,
+        out SKPoint intersection,
+        out SKPoint close_p1, out SKPoint close_p2)
+    {
+        // Get the segments' parameters.
+        float dx12 = p2.X - p1.X;
+        float dy12 = p2.Y - p1.Y;
+        float dx34 = p4.X - p3.X;
+        float dy34 = p4.Y - p3.Y;
 
+        // Solve for t1 and t2
+        float denominator = (dy12 * dx34 - dx12 * dy34);
+
+        float t1 =
+            ((p1.X - p3.X) * dy34 + (p3.Y - p1.Y) * dx34)
+            / denominator;
+        if (float.IsInfinity(t1))
+        {
+            // The lines are parallel (or close enough to it).
+            lines_intersect    = false;
+            segments_intersect = false;
+            intersection       = new SKPoint(float.NaN, float.NaN);
+            close_p1           = new SKPoint(float.NaN, float.NaN);
+            close_p2           = new SKPoint(float.NaN, float.NaN);
+            return;
+        }
+        lines_intersect = true;
+
+        float t2 =
+            ((p3.X - p1.X) * dy12 + (p1.Y - p3.Y) * dx12)
+            / -denominator;
+
+        // Find the point of intersection.
+        intersection = new SKPoint(p1.X + dx12 * t1, p1.Y + dy12 * t1);
+
+        // The segments intersect if t1 and t2 are between 0 and 1.
+        segments_intersect =
+            ((t1 >= 0) && (t1 <= 1) &&
+             (t2 >= 0) && (t2 <= 1));
+
+        // Find the closest points on the segments.
+        if (t1 < 0)
+        {
+            t1 = 0;
+        }
+        else if (t1 > 1)
+        {
+            t1 = 1;
+        }
+
+        if (t2 < 0)
+        {
+            t2 = 0;
+        }
+        else if (t2 > 1)
+        {
+            t2 = 1;
+        }
+
+        close_p1 = new SKPoint(p1.X + dx12 * t1, p1.Y + dy12 * t1);
+        close_p2 = new SKPoint(p3.X + dx34 * t2, p3.Y + dy34 * t2);
+    }
     public Map(int roomMinW, int roomMinH, int roomMaxW, int roomMaxH, int minRoomCount, int maxRoomCount, int minDistanceBetweenRooms, int maxDistanceBetweenRooms, int? seed = null)
     {
+        var l1   = new SKLine(new SKPoint(0,  0), new SKPoint(10,        10));
+        var l2   = new SKLine(new SKPoint(10, 0), new SKPoint(5.000001f, 5));
+        var q    = l1.IsIntersect(l2);
+        var qq   = new SKRectI();
+        var qqq  = qq.GetTopLine();
+        var qqq1 = qq.GetTopLine();
+        var q1   = qqq.IsIntersectI(qqq1);
+        //indIntersection(l1.Start, l1.End, l2.Start, l2.End, out var intersect, out var sInterssect, out var q1, out var q2, out var q3);
         _roomMinW                       = roomMinW;
         _roomMinH                       = roomMinH;
         _roomMaxW                       = roomMaxW;
@@ -204,11 +277,39 @@ public class Map : ViewModelBase
                 }
                 else
                 {
-                    var excluded = new List<Pass>();
-                    if (!GetNearestRooms(x).Where(_ => _ != c).Intersect(GetNearestRooms(c).Where(_ => _ != x)).Any() || MaxDistanceFromCornerToCorridor == 7)
+                    if(MaxDistanceFromCornerToCorridor == 7) continue;
+                    
+                    var xNearest = GetNearestRooms(x).Where(_ => _ != c).ToList();
+                    var cNearest = GetNearestRooms(c).Where(_ => _ != x).ToList();
+                    var nearest  = xNearest.Intersect(cNearest).ToList();
+                    if (nearest.Count == 0)
                     {
                         Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                        //throw new Exception();
                     }
+                    else if (nearest.Count == 1)
+                    {
+                        //if (x.Rect.GetStepsCount(c.Rect) - (x.Rect.Width / 2) - (x.Rect.Height / 2) > MaxDistanceBetweenRooms * 2.5f)
+                        //{
+                            Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                        //}
+                    }
+                    else if (nearest.Count == 2)
+                    {
+
+                        //if (x.Rect.GetStepsCount(c.Rect) > Math.Sqrt(Math.Pow(x.Rect.GetXYStepsCount(c.Rect).X, 2) + Math.Pow(x.Rect.GetXYStepsCount(c.Rect).Y, 2)) * 1.2f)
+                        //{
+                        //    Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                        //}
+                    }
+                    else
+                    {
+                        //throw new Exception();
+                    }
+                    //if (!GetNearestRooms(x).Where(_ => _ != c).Intersect(GetNearestRooms(c).Where(_ => _ != x)).Any() || MaxDistanceFromCornerToCorridor == 7)
+                    //{
+                    //    Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                    //}
                 }
 
             }
@@ -273,7 +374,7 @@ public class Map : ViewModelBase
         //}
         foreach (var x in Passes)
         {
-            sbmp.DrawLine(new SKPointI(x.StartRoom.Rect.Left + x.Start.X, x.StartRoom.Rect.Top + x.Start.Y), new SKPointI(x.EndRoom.Rect.Left + x.End.X, x.EndRoom.Rect.Top + x.End.Y), new SKColor(0, 50, 255, 255), 3);
+            sbmp.DrawLine(new SKPointI(x.StartRoom.Rect.Left + x.Start.X, x.StartRoom.Rect.Top + x.Start.Y), new SKPointI(x.EndRoom.Rect.Left + x.End.X, x.EndRoom.Rect.Top + x.End.Y), new SKColor(0, 50, 255, 255), 1);
         }
 
         for (var i = 0; i < Rooms.Count; i++)
