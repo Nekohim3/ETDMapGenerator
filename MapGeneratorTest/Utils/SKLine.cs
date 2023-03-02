@@ -19,11 +19,8 @@ namespace MapGeneratorTest.Utils
             Start = start;
             End   = end;
         }
-        public SKLine(SKPointI start, SKPointI end)
-        {
-            Start = start;
-            End   = end;
-        }
+
+        public static implicit operator SKLine(SKLineI l) => new SKLine(new SKPoint(l.Start.X, l.Start.Y), new SKPoint(l.End.X, l.End.Y));
     }
     public struct SKLineI
     {
@@ -36,6 +33,12 @@ namespace MapGeneratorTest.Utils
         {
             Start = start;
             End   = end;
+        }
+
+        public SKLineI(int sx, int sy, int ex, int ey)
+        {
+            Start = new SKPointI(sx, sy);
+            End   = new SKPointI(ex, ey);
         }
     }
 }

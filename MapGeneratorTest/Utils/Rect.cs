@@ -55,8 +55,8 @@ public static class RectangleExtension
 
     public static SKPoint IsIntersect(this SKLine l, SKLine other)
     {
-        var dx12 = l.End.X - l.Start.X;
-        var dy12 = l.End.Y - l.Start.Y;
+        var dx12 = l.End.X     - l.Start.X;
+        var dy12 = l.End.Y     - l.Start.Y;
         var dx34 = other.End.X - other.Start.X;
         var dy34 = other.End.Y - other.Start.Y;
 
@@ -66,7 +66,27 @@ public static class RectangleExtension
         if (float.IsInfinity(t1))
             return default;
 
-        var t2 = ((other.Start.X - l.Start.X) * dy12 + (l.Start.Y - other.Start.Y) * dx12) / -denominator;
+        var t2           = ((other.Start.X - l.Start.X) * dy12 + (l.Start.Y - other.Start.Y) * dx12) / -denominator;
+        var intersection = new SKPoint(l.Start.X + dx12 * t1, l.Start.Y + dy12 * t1);
+        if ((t1 is >= 0 and <= 1 && t2 is >= 0 and <= 1))
+            return intersection;
+
+        return default;
+    }
+    public static SKPoint IsIntersect(this SKLineI l, SKLineI other)
+    {
+        var dx12 = l.End.X     - l.Start.X;
+        var dy12 = l.End.Y     - l.Start.Y;
+        var dx34 = other.End.X - other.Start.X;
+        var dy34 = other.End.Y - other.Start.Y;
+
+        var denominator = (dy12 * dx34 - dx12 * dy34);
+
+        var t1 = ((l.Start.X - other.Start.X) * dy34 + (other.Start.Y - l.Start.Y) * dx34) / denominator;
+        if (float.IsInfinity(t1))
+            return default;
+
+        var t2           = ((other.Start.X - l.Start.X) * dy12 + (l.Start.Y - other.Start.Y) * dx12) / -denominator;
         var intersection = new SKPoint(l.Start.X + dx12 * t1, l.Start.Y + dy12 * t1);
         if ((t1 is >= 0 and <= 1 && t2 is >= 0 and <= 1))
             return intersection;
@@ -74,7 +94,7 @@ public static class RectangleExtension
         return default;
     }
 
-    public static SKPoint IsIntersectI(this SKLineI l, SKLineI other) => IsIntersect(new SKLine(l.Start, l.End), new SKLine(other.Start, other.End));
+    //public static SKPoint IsIntersect(this SKLineI l, SKLineI other) => IsIntersect(l, other);
 
     public static AngleDirection GetDirection(double angle)
     {

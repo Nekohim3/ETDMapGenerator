@@ -4,12 +4,20 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MapGeneratorTest.Utils;
 using MapGeneratorTest.ViewModels;
 using ReactiveUI;
 using SkiaSharp;
 
 namespace MapGeneratorTest.MapGenerator
 {
+    public enum PassType
+    {
+        Straight,
+        Oblique,
+        SingleBend,
+        TwoBend,
+    }
     public class Pass : ViewModelBase
     {
         private Room _startRoom;
@@ -40,18 +48,23 @@ namespace MapGeneratorTest.MapGenerator
             set => this.RaiseAndSetIfChanged(ref _end, value);
         }
 
-        public Pass(Room startRoom, Room endRoom)
+        private PassType _type;
+        public PassType Type
         {
-            _startRoom = startRoom;
-            _endRoom   = endRoom;
+            get => _type;
+            set => this.RaiseAndSetIfChanged(ref _type, value);
         }
 
-        public Pass(Room startRoom, Room endRoom, SKPointI start, SKPointI end)
+        //public Pass(Room startRoom, Room endRoom)
+        //{
+        //    _startRoom = startRoom;
+        //    _endRoom   = endRoom;
+        //}
+
+        public Pass(Room startRoom, Room endRoom, params SKLineI[] lineList)
         {
             _startRoom = startRoom;
             _endRoom   = endRoom;
-            _start     = start;
-            _end       = end;
         }
     }
 }

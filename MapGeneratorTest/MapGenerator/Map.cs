@@ -192,7 +192,7 @@ public class Map : ViewModelBase
         var qq   = new SKRectI();
         var qqq  = qq.GetTopLine();
         var qqq1 = qq.GetTopLine();
-        var q1   = qqq.IsIntersectI(qqq1);
+        var q1   = qqq.IsIntersect(qqq1);
         //indIntersection(l1.Start, l1.End, l2.Start, l2.End, out var intersect, out var sInterssect, out var q1, out var q2, out var q3);
         _roomMinW                       = roomMinW;
         _roomMinH                       = roomMinH;
@@ -289,27 +289,17 @@ public class Map : ViewModelBase
                     }
                     else if (nearest.Count == 1)
                     {
-                        //if (x.Rect.GetStepsCount(c.Rect) - (x.Rect.Width / 2) - (x.Rect.Height / 2) > MaxDistanceBetweenRooms * 2.5f)
-                        //{
                             Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
-                        //}
+                        
                     }
                     else if (nearest.Count == 2)
                     {
 
-                        //if (x.Rect.GetStepsCount(c.Rect) > Math.Sqrt(Math.Pow(x.Rect.GetXYStepsCount(c.Rect).X, 2) + Math.Pow(x.Rect.GetXYStepsCount(c.Rect).Y, 2)) * 1.2f)
-                        //{
-                        //    Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
-                        //}
                     }
                     else
                     {
-                        //throw new Exception();
+
                     }
-                    //if (!GetNearestRooms(x).Where(_ => _ != c).Intersect(GetNearestRooms(c).Where(_ => _ != x)).Any() || MaxDistanceFromCornerToCorridor == 7)
-                    //{
-                    //    Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
-                    //}
                 }
 
             }
