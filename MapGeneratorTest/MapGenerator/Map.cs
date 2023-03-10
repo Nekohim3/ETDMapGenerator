@@ -186,13 +186,13 @@ public class Map : ViewModelBase
     }
     public Map(int roomMinW, int roomMinH, int roomMaxW, int roomMaxH, int minRoomCount, int maxRoomCount, int minDistanceBetweenRooms, int maxDistanceBetweenRooms, int? seed = null)
     {
-        var l1   = new SKLine(new SKPoint(0,  0), new SKPoint(10,        10));
-        var l2   = new SKLine(new SKPoint(10, 0), new SKPoint(5.000001f, 5));
-        var q    = l1.IsIntersect(l2);
-        var qq   = new SKRectI();
-        var qqq  = qq.GetTopLine();
-        var qqq1 = qq.GetTopLine();
-        var q1   = qqq.IsIntersect(qqq1);
+        //var l1   = new SKLine(new SKPoint(0,  0), new SKPoint(10,        10));
+        //var l2   = new SKLine(new SKPoint(10, 0), new SKPoint(5.000001f, 5));
+        //var q    = l1.IsIntersect(l2);
+        //var qq   = new SKRectI();
+        //var qqq  = qq.GetTopLine();
+        //var qqq1 = qq.GetTopLine();
+        //var q1   = qqq.IsIntersect(qqq1);
         //indIntersection(l1.Start, l1.End, l2.Start, l2.End, out var intersect, out var sInterssect, out var q1, out var q2, out var q3);
         _roomMinW                       = roomMinW;
         _roomMinH                       = roomMinH;
@@ -264,16 +264,19 @@ public class Map : ViewModelBase
                 {
                     var passX = GetRand(Math.Max(x.Rect.Left, c.Rect.Left) + 1, Math.Min(x.Rect.Right, c.Rect.Right) - 1); //(Math.Max(x.Rect.Left, c.Rect.Left) + Math.Min(x.Rect.Right, c.Rect.Right)) / 2;
                     Passes.Add(x.Rect.Bottom < c.Rect.Top
-                                   ? new Pass(x, c, new SKPointI(passX - x.Rect.Left, x.Rect.Height), new SKPointI(passX - c.Rect.Left, 0))
-                                   : new Pass(x, c, new SKPointI(passX - x.Rect.Left, 0),             new SKPointI(passX - c.Rect.Left, c.Rect.Height)));
+                                   ? new Pass(x, c, new SKLineI(passX - x.Rect.Left, x.Rect.Height, passX   - c.Rect.Left, 0))
+                                   : new Pass(x, c, new SKLineI(passX - x.Rect.Left, 0, passX - c.Rect.Left, c.Rect.Height)));
+                    //Passes.Add(x.Rect.Bottom < c.Rect.Top
+                    //               ? new Pass(x, c, new SKPointI(passX - x.Rect.Left, x.Rect.Height), new SKPointI(passX - c.Rect.Left, 0))
+                    //               : new Pass(x, c, new SKPointI(passX - x.Rect.Left, 0),             new SKPointI(passX - c.Rect.Left, c.Rect.Height)));
                 }
                 else if (c.Rect.Bottom > x.Rect.Top + 2 && c.Rect.Top < x.Rect.Bottom - 2)
                 {
                     var passY = GetRand(Math.Max(x.Rect.Top, c.Rect.Top) + 1, Math.Min(x.Rect.Bottom, c.Rect.Bottom) - 1); //(Math.Max(x.Rect.Top, c.Rect.Top) + Math.Min(x.Rect.Bottom, c.Rect.Bottom)) / 2;
 
                     Passes.Add(x.Rect.Right < c.Rect.Left
-                                   ? new Pass(x, c, new SKPointI(x.Rect.Width, passY - x.Rect.Top), new SKPointI(0, passY - c.Rect.Top))
-                                   : new Pass(x, c, new SKPointI(0,passY - x.Rect.Top),             new SKPointI(c.Rect.Width, passY - c.Rect.Top)));
+                                   ? new Pass(x, c, new SKLineI(x.Rect.Width, passY - x.Rect.Top, 0,            passY - c.Rect.Top))
+                                   : new Pass(x, c, new SKLineI(0,            passY - x.Rect.Top, c.Rect.Width, passY - c.Rect.Top)));
                 }
                 else
                 {
@@ -284,12 +287,12 @@ public class Map : ViewModelBase
                     var nearest  = xNearest.Intersect(cNearest).ToList();
                     if (nearest.Count == 0)
                     {
-                        Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                        Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
                         //throw new Exception();
                     }
                     else if (nearest.Count == 1)
                     {
-                            Passes.Add(new Pass(x, c, new SKPointI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top), new SKPointI(c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                            Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
                         
                     }
                     else if (nearest.Count == 2)
