@@ -34,18 +34,25 @@ namespace MapGeneratorTest.MapGenerator
             set => this.RaiseAndSetIfChanged(ref _endRoom, value);
         }
 
-        private SKPointI _start;
-        public SKPointI Start
-        {
-            get => _start;
-            set => this.RaiseAndSetIfChanged(ref _start, value);
-        }
+        //private SKPointI _start;
+        //public SKPointI Start
+        //{
+        //    get => _start;
+        //    set => this.RaiseAndSetIfChanged(ref _start, value);
+        //}
 
-        private SKPointI _end;
-        public SKPointI End
+        //private SKPointI _end;
+        //public SKPointI End
+        //{
+        //    get => _end;
+        //    set => this.RaiseAndSetIfChanged(ref _end, value);
+        //}
+
+        private List<SKLineI> _lineList;
+        public List<SKLineI> LineList
         {
-            get => _end;
-            set => this.RaiseAndSetIfChanged(ref _end, value);
+            get => _lineList;
+            set => this.RaiseAndSetIfChanged(ref _lineList, value);
         }
 
         private PassType _type;
@@ -65,6 +72,14 @@ namespace MapGeneratorTest.MapGenerator
         {
             _startRoom = startRoom;
             _endRoom   = endRoom;
+            LineList = lineList.ToList();
         }
+        //public Pass(Room startRoom, Room endRoom, SKPointI start, SKPointI end)
+        //{
+        //    _startRoom = startRoom;
+        //    _endRoom   = endRoom;
+        //    Start      = start;
+        //    End = end;
+        //}
     }
 }

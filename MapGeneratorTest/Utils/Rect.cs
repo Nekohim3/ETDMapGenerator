@@ -81,7 +81,8 @@ public static class RectangleExtension
         var dy34 = other.End.Y - other.Start.Y;
 
         var denominator = (dy12 * dx34 - dx12 * dy34);
-
+        if (denominator == 0)
+            return default;
         var t1 = ((l.Start.X - other.Start.X) * dy34 + (other.Start.Y - l.Start.Y) * dx34) / denominator;
         if (float.IsInfinity(t1))
             return default;
