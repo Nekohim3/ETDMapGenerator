@@ -215,7 +215,7 @@ public class Map : ViewModelBase
         if (GenerateRooms())
         {
             GeneratePasses();
-            Image = GetMapImage().Crop(GetArea()).GetBitmap;
+            Image = GetMapImage().GetBitmap;
             GetMapImage().Crop(GetArea()).Save("C:\\Config\\test.png");
         }
         else
@@ -263,51 +263,147 @@ public class Map : ViewModelBase
                 if(PassExist(x, c)) continue;
                 if (c.Rect.Right  > x.Rect.Left + 2 && c.Rect.Left < x.Rect.Right  - 2)
                 {
-                    var passX = GetRand(Math.Max(x.Rect.Left, c.Rect.Left) + 1, Math.Min(x.Rect.Right, c.Rect.Right) - 1); 
+                    var passX = GetRand(Math.Max(x.Rect.Left, c.Rect.Left) + 1, Math.Min(x.Rect.Right, c.Rect.Right) - 1);
                     Passes.Add(x.Rect.Bottom < c.Rect.Top
-                               ? new Pass(x, c, new SKLineI(passX - x.Rect.Left, x.Rect.Height, passX - c.Rect.Left, 0))
-                               : new Pass(x, c, new SKLineI(passX - x.Rect.Left, 0,             passX - c.Rect.Left, c.Rect.Height)));
+                                   ? new Pass(x, c, new SKLineI(passX, x.Rect.Bottom, passX, c.Rect.Top))
+                                   : new Pass(x, c, new SKLineI(passX, x.Rect.Top,    passX, c.Rect.Bottom)));
                 }
                 else if (c.Rect.Bottom > x.Rect.Top + 2 && c.Rect.Top < x.Rect.Bottom - 2)
                 {
-                    var passY = GetRand(Math.Max(x.Rect.Top, c.Rect.Top) + 1, Math.Min(x.Rect.Bottom, c.Rect.Bottom) - 1); 
+                    var passY = GetRand(Math.Max(x.Rect.Top, c.Rect.Top) + 1, Math.Min(x.Rect.Bottom, c.Rect.Bottom) - 1);
                     Passes.Add(x.Rect.Right < c.Rect.Left
-                                   ? new Pass(x, c, new SKLineI(x.Rect.Width, passY - x.Rect.Top, 0,            passY - c.Rect.Top))
-                                   : new Pass(x, c, new SKLineI(0,            passY - x.Rect.Top, c.Rect.Width, passY - c.Rect.Top)));
+                                   ? new Pass(x, c, new SKLineI(x.Rect.Right, passY, c.Rect.Left,  passY))
+                                   : new Pass(x, c, new SKLineI(x.Rect.Left,  passY, c.Rect.Right, passY)));
 
                 }
                 else
                 {
                     if(MaxDistanceFromCornerToCorridor == 7) continue;
-                    
-                    var xNearest = GetNearestRooms(x).Where(_ => _ != c).ToList();
-                    var cNearest = GetNearestRooms(c).Where(_ => _ != x).ToList();
-                    var nearest  = xNearest.Intersect(cNearest).ToList();
-                    if (nearest.Count == 0)
+                    var line  = new SKLineI(x.Rect.MidX, x.Rect.MidY, c.Rect.MidX, c.Rect.MidY);
+                    var xp    = x.Rect.GetRectIntersectType(line);
+                    var cp    = c.Rect.GetRectIntersectType(line);
+                    var lines = new List<SKLineI>();
+                    if (xp.IsOpposite(cp))
                     {
-                        Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
-                    }
-                    else if (nearest.Count == 1)
-                    {
-                        Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
-                    }
-                    else if (nearest.Count == 2)
-                    {
+                        switch (xp)
+                        {
+                            case RectIntersectType.LeftTop:
+                            {
+                                var output = GetRand(x.Rect.Top,    x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Bottom, c.Rect.MidY);
+                                var br     = (x.Rect.Left + c.Rect.Right) / 2; //GetRand(x.Rect.Left,   c.Rect.Right);
+                                lines.Add(new SKLineI(x.Rect.Left,  output, br, output));
+                                lines.Add(new SKLineI(c.Rect.Right, input,  br, input));
+                                lines.Add(new SKLineI(br,           output, br, input));
+                                }
+                                break;
+                            case RectIntersectType.LeftBottom:
+                            {
+                                var output = GetRand(x.Rect.Bottom, x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Top,    c.Rect.MidY);
+                                var br     = (x.Rect.Left + c.Rect.Right) / 2; //GetRand(x.Rect.Left,   c.Rect.Right);
+                                lines.Add(new SKLineI(x.Rect.Left,  output, br, output));
+                                lines.Add(new SKLineI(c.Rect.Right, input,  br, input));
+                                lines.Add(new SKLineI(br,           output, br, input + 1));
+                                }
+                                break;
+                            case RectIntersectType.TopLeft:
+                            {
+                                var output = GetRand(x.Rect.Left,    x.Rect.MidX);
+                                var input  = GetRand(c.Rect.Right, c.Rect.MidX);
+                                var br     = GetRand(x.Rect.Top,   c.Rect.Bottom);
+                                lines.Add(new SKLineI(output, x.Rect.Left,  output, br));
+                                lines.Add(new SKLineI(input,  c.Rect.Right, output, br));
+                                lines.Add(new SKLineI(output, br,           input,  br));
+                            }
+                                break;
+                            case RectIntersectType.TopRight:
+                            {
 
+                                var output = GetRand(x.Rect.Right,  x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Left, c.Rect.MidY);
+                                var br     = GetRand(x.Rect.Top,   c.Rect.Bottom);
+                                lines.Add(new SKLineI(output, x.Rect.Left,  output, br));
+                                lines.Add(new SKLineI(input,  c.Rect.Right, output, br));
+                                lines.Add(new SKLineI(output, br,           input,  br));
+                                }
+                                break;
+                            case RectIntersectType.RightTop:
+                            {
+                                var output = GetRand(x.Rect.Top,    x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Bottom, c.Rect.MidY);
+                                var br     = GetRand(x.Rect.Right,   c.Rect.Left);
+                                lines.Add(new SKLineI(x.Rect.Left,  output, br, output));
+                                lines.Add(new SKLineI(c.Rect.Right, input,  br, input));
+                                lines.Add(new SKLineI(br,           output, br, input));
+                                }
+                                break;
+                            case RectIntersectType.RightBottom:
+                            {
+                                var output = GetRand(x.Rect.Bottom, x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Top,    c.Rect.MidY);
+                                var br     = GetRand(x.Rect.Right,   c.Rect.Left);
+                                lines.Add(new SKLineI(x.Rect.Left,  output, br, output));
+                                lines.Add(new SKLineI(c.Rect.Right, input,  br, input));
+                                lines.Add(new SKLineI(br,           output, br, input + 1));
+                                }
+                                break;
+                            case RectIntersectType.BottomLeft:
+                            {
+                                var output = GetRand(x.Rect.Left,  x.Rect.MidY);
+                                var input  = GetRand(c.Rect.Right, c.Rect.MidY);
+                                var br     = GetRand(x.Rect.Bottom,   c.Rect.Top);
+                                lines.Add(new SKLineI(output, x.Rect.Left,  output, br));
+                                lines.Add(new SKLineI(input,  c.Rect.Right, output, br));
+                                lines.Add(new SKLineI(output, br,           input,  br));
+                                }
+                                break;
+                            case RectIntersectType.BottomRight:
+                            {
+
+                                var output = GetRand(x.Rect.Right, x.Rect.MidX);
+                                var input  = GetRand(c.Rect.Left,  c.Rect.MidX);
+                                var br     = (x.Rect.Top + c.Rect.Bottom) / 2 + 1;
+                                lines.Add(new SKLineI(output, x.Rect.Left + 1,  output, br));
+                                lines.Add(new SKLineI(input,  c.Rect.Right + 3, input, br));
+                                lines.Add(new SKLineI(output, br,           input,  br));
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
                     }
                     else
                     {
-
+                        
                     }
+                    Passes.Add(new Pass(x, c, lines.ToArray()));
+                    //Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX, x.Rect.MidY, c.Rect.MidX, x.Rect.MidY), 
+                    //                    new SKLineI(c.Rect.MidX, c.Rect.MidY, c.Rect.MidX, x.Rect.MidY)));
+                    //var xNearest = GetNearestRooms(x).Where(_ => _ != c).ToList();
+                    //var cNearest = GetNearestRooms(c).Where(_ => _ != x).ToList();
+                    //var nearest  = xNearest.Intersect(cNearest).ToList();
+                    //if (nearest.Count == 0)
+                    //{
+                    //    Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                    //}
+                    //else if (nearest.Count == 1)
+                    //{
+                    //    Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX - x.Rect.Left, x.Rect.MidY - x.Rect.Top, c.Rect.MidX - c.Rect.Left, c.Rect.MidY - c.Rect.Top)));
+                    //}
+                    //else if (nearest.Count == 2)
+                    //{
+
+                    //}
+                    //else
+                    //{
+
+                    //}
                 }
 
             }
         }
-
-        foreach (var x in Passes)
-        {
-            
-        }
+        
         return false;
     }
 
@@ -334,19 +430,19 @@ public class Map : ViewModelBase
 
     public Sbmp GetMapImage()
     {
-        var sbmp = new Sbmp(1000, 1000);
+        var sbmp = new Sbmp(Rooms.Max(_ => _.Rect.Right), Rooms.Max(_ => _.Rect.Bottom));
         sbmp.Fill(SKColors.Gray);
-        foreach (var x in Rooms)
-            sbmp.DrawOutlinedRectangle(x.Rect.ExpandAll(MinDistanceBetweenRooms), new SKColor(0, 150, 50, 255), 1);
-        foreach (var x in Rooms)
-        {
-            var rect = x.Rect.ExpandAll(MaxDistanceBetweenRooms);
-            sbmp.DrawLine(new SKPoint(rect.Left,  rect.Top),    new SKPoint(x.Rect.Left,  x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
-            sbmp.DrawLine(new SKPoint(rect.Right, rect.Top),    new SKPoint(x.Rect.Right, x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
-            sbmp.DrawLine(new SKPoint(rect.Left,  rect.Bottom), new SKPoint(x.Rect.Left,  x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
-            sbmp.DrawLine(new SKPoint(rect.Right, rect.Bottom), new SKPoint(x.Rect.Right, x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
-            sbmp.DrawOutlinedRectangle(rect, new SKColor(150,                                                              50, 50, 255), 1);
-        }
+        //foreach (var x in Rooms)
+        //    sbmp.DrawOutlinedRectangle(x.Rect.ExpandAll(MinDistanceBetweenRooms), new SKColor(0, 150, 50, 255), 1);
+        //foreach (var x in Rooms)
+        //{
+        //    var rect = x.Rect.ExpandAll(MaxDistanceBetweenRooms);
+        //    sbmp.DrawLine(new SKPoint(rect.Left,  rect.Top),    new SKPoint(x.Rect.Left,  x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
+        //    sbmp.DrawLine(new SKPoint(rect.Right, rect.Top),    new SKPoint(x.Rect.Right, x.Rect.Top),    new SKColor(150, 50, 50, 255), 1);
+        //    sbmp.DrawLine(new SKPoint(rect.Left,  rect.Bottom), new SKPoint(x.Rect.Left,  x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
+        //    sbmp.DrawLine(new SKPoint(rect.Right, rect.Bottom), new SKPoint(x.Rect.Right, x.Rect.Bottom), new SKColor(150, 50, 50, 255), 1);
+        //    sbmp.DrawOutlinedRectangle(rect, new SKColor(150,                                                              50, 50, 255), 1);
+        //}
 
         foreach (var x in Rooms)
             sbmp.DrawFillRectangle(x.Rect, new SKColor(0, 50, 255, 255));
@@ -365,7 +461,7 @@ public class Map : ViewModelBase
         {
             foreach (var c in x.LineList)
             {
-                sbmp.DrawLine(new SKPointI(x.StartRoom.Rect.Left + c.Start.X, x.StartRoom.Rect.Top + c.Start.Y), new SKPointI(x.EndRoom.Rect.Left + c.End.X, x.EndRoom.Rect.Top + c.End.Y), new SKColor(0, 50, 255, 255), 1);
+                sbmp.DrawLine(new SKPointI(c.Start.X, c.Start.Y), new SKPointI(c.End.X, c.End.Y), new SKColor(255, 20, 25, 255), 1);
             }
             //sbmp.DrawLine(new SKPointI(x.StartRoom.Rect.Left + x.Start.X, x.StartRoom.Rect.Top + x.Start.Y), new SKPointI(x.EndRoom.Rect.Left + x.End.X, x.EndRoom.Rect.Top + x.End.Y), new SKColor(0, 50, 255, 255), 1);
         }

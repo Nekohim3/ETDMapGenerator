@@ -8,22 +8,37 @@ using System.Threading.Tasks;
 using IronSoftware.Drawing;
 using ReactiveUI;
 using SkiaSharp;
+using Avalonia.Controls.Shapes;
 
 namespace MapGeneratorTest.Utils;
 
 public enum AngleDirection
 {
-    N,
-    NE,
-    E,
-    SE,
-    S,
-    SW,
-    W,
-    NW
+    N = 0,
+    NE = 1,
+    E = 2,
+    SE = 3,
+    S = 4,
+    SW = 5,
+    W = 6,
+    NW = 7
 }
+
+public enum RectIntersectType
+{
+    LeftTop = 0,
+    LeftBottom = 1,
+    TopLeft = 2,
+    TopRight = 3,
+    RightTop = 4,
+    RightBottom = 5,
+    BottomLeft = 6,
+    BottomRight = 7
+}
+
 public static class RectangleExtension
 {
+
     public static SKRectI ExpandLeft(this   SKRectI r, int left)   => r with { Left = r.Left    - left };
     public static SKRectI ExpandTop(this    SKRectI r, int top)    => r with { Top = r.Top      - top };
     public static SKRectI ExpandRight(this  SKRectI r, int right)  => r with { Right = r.Right  + right};
@@ -43,7 +58,15 @@ public static class RectangleExtension
     public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with {X = p.X + x, Y = p.Y + y};
 
     public static SKPointI GetXYStepsCount(this SKRectI r, SKRectI other) => new SKPointI(Math.Abs(r.MidX - other.MidX), Math.Abs(r.MidY - other.MidX));
-    public static int      GetStepsCount(this   SKRectI r, SKRectI other) => GetXYStepsCount(r, other).X + GetXYStepsCount(r, other).Y; 
+    public static int      GetStepsCount(this   SKRectI r, SKRectI other) => GetXYStepsCount(r, other).X + GetXYStepsCount(r, other).Y;
+
+    public static List<SKLineI> GetRectLines(this SKRectI r) => new List<SKLineI>()
+                                                                {
+                                                                    new SKLineI(r.Left,  r.Top,    r.Left,  r.Bottom),
+                                                                    new SKLineI(r.Left,  r.Top,    r.Right, r.Top),
+                                                                    new SKLineI(r.Right, r.Top,    r.Right, r.Bottom),
+                                                                    new SKLineI(r.Left,  r.Bottom, r.Right, r.Bottom)
+                                                                };
 
     public static double GetAngleToRect(this SKRectI  r, SKRectI  other) => GetAngleTo(r.GetMidPoint(), other.GetMidPoint());
     public static double GetAngleTo(this     SKPoint p, SKPoint other)
@@ -52,7 +75,21 @@ public static class RectangleExtension
         if(angle < 0) angle += 360;
         return angle;
     }
+    private static bool IsInsideLine(SKLineI line, SKPoint p, float tolerance)
+    {
+        float x = p.X, y = p.Y;
 
+        var leftX = line.Start.X;
+        var leftY = line.Start.Y;
+
+        var rightX = line.End.X;
+        var rightY = line.End.Y;
+
+        return (x.IsGreaterThanOrEqual(leftX,     tolerance) && x.IsLessThanOrEqual(rightX, tolerance)
+                || x.IsGreaterThanOrEqual(rightX, tolerance) && x.IsLessThanOrEqual(leftX,  tolerance))
+               && (y.IsGreaterThanOrEqual(leftY,     tolerance) && y.IsLessThanOrEqual(rightY, tolerance)
+                   || y.IsGreaterThanOrEqual(rightY, tolerance) && y.IsLessThanOrEqual(leftY,  tolerance));
+    }
     public static SKPoint IsIntersect(this SKLine l, SKLine other)
     {
         var dx12 = l.End.X     - l.Start.X;
@@ -73,24 +110,78 @@ public static class RectangleExtension
 
         return default;
     }
-    public static SKPoint IsIntersect(this SKLineI l, SKLineI other)
+    public static SKPoint IsIntersect(this SKLineI l, SKLineI other, float tolerance = 0.00005f)
     {
-        var dx12 = l.End.X     - l.Start.X;
-        var dy12 = l.End.Y     - l.Start.Y;
-        var dx34 = other.End.X - other.Start.X;
-        var dy34 = other.End.Y - other.Start.Y;
+        if (l.Start == other.Start && l.End == other.End) throw new Exception("Both lines are the same.");
+        
+        if (l.Start.X.CompareTo(other.Start.X) > 0)
+            (l, other) = (other, l);
+        else if (l.Start.X.CompareTo(other.Start.X) == 0)
+        {
+            if (l.Start.Y.CompareTo(other.Start.Y) > 0)
+                (l, other) = (other, l);
+        }
 
-        var denominator = (dy12 * dx34 - dx12 * dy34);
-        if (denominator == 0)
-            return default;
-        var t1 = ((l.Start.X - other.Start.X) * dy34 + (other.Start.Y - l.Start.Y) * dx34) / denominator;
-        if (float.IsInfinity(t1))
-            return default;
+        float x1 = l.Start.X, y1 = l.Start.Y;
+        float x2 = l.End.X, y2 = l.End.Y;
+        float x3 = other.Start.X, y3 = other.Start.Y;
+        float x4 = other.End.X, y4 = other.End.Y;
 
-        var t2           = ((other.Start.X - l.Start.X) * dy12 + (l.Start.Y - other.Start.Y) * dx12) / -denominator;
-        var intersection = new SKPoint(l.Start.X + dx12 * t1, l.Start.Y + dy12 * t1);
-        if ((t1 is >= 0 and <= 1 && t2 is >= 0 and <= 1))
-            return intersection;
+        if (x1.IsEqual(x2) && x3.IsEqual(x4) && x1.IsEqual(x3))
+        {
+            var firstIntersection = new SKPoint(x3, y3);
+            if (IsInsideLine(l, firstIntersection, tolerance) &&
+                IsInsideLine(other, firstIntersection, tolerance))
+                return new SKPoint(x3, y3);
+        }
+        
+        if (y1.IsEqual(y2) && y3.IsEqual(y4) && y1.IsEqual(y3))
+        {
+            var firstIntersection = new SKPoint(x3, y3);
+            if (IsInsideLine(l, firstIntersection, tolerance) &&
+                IsInsideLine(other, firstIntersection, tolerance))
+                return new SKPoint(x3, y3);
+        }
+        
+        if (x1.IsEqual(x2) && x3.IsEqual(x4)) return default;
+        
+        if (y1.IsEqual(y2) && y3.IsEqual(y4)) return default;
+
+        float x, y;
+        if (x1.IsEqual(x2))
+        {
+            var m2 = (y4 - y3) / (x4 - x3);
+            var c2 = -m2 * x3 + y3;
+            x = x1;
+            y = c2 + m2 * x1;
+        }
+        else if (x3.IsEqual(x4))
+        {
+            var m1 = (y2 - y1) / (x2 - x1);
+            var c1 = -m1 * x1 + y1;
+            x = x3;
+            y = c1 + m1 * x3;
+        }
+        else
+        {
+
+            var m1 = (y2 - y1) / (x2 - x1);
+            var c1 = -m1 * x1 + y1;
+            var m2 = (y4 - y3) / (x4 - x3);
+            var c2 = -m2 * x3 + y3;
+            x = (c1 - c2) / (m2 - m1);
+            y = c2 + m2 * x;
+
+            if (!((-m1 * x + y).IsEqual(c1)
+                  && (-m2 * x + y).IsEqual(c2)))
+                return default;
+        }
+
+        var result = new SKPoint(x, y);
+
+        if (IsInsideLine(l, result, tolerance) &&
+            IsInsideLine(other, result, tolerance))
+            return result;
 
         return default;
     }
@@ -118,7 +209,66 @@ public static class RectangleExtension
 
     public static AngleDirection GetDirectionTo(this SKPoint p, SKPoint other) => GetDirection(p.GetAngleTo(other));
 
+    public static RectIntersectType GetRectIntersectType(this SKRectI r, SKLineI l)
+    {
+        var lines = r.GetRectLines().Select(_ => _.IsIntersect(l)).ToList();
+        if (lines[0] != default)
+        {
+            return r.MidY > lines[0].Y ? RectIntersectType.LeftTop : RectIntersectType.LeftBottom;
+        }
+        else if (lines[1] != default)
+        {
+            return r.MidX > lines[1].X ? RectIntersectType.TopLeft : RectIntersectType.TopRight;
+        }
+        else if (lines[2] != default)
+        {
+            return r.MidY > lines[2].Y ? RectIntersectType.RightTop : RectIntersectType.RightBottom;
+        }
+        else if (lines[3] != default)
+        {
+            return r.MidX > lines[3].X ? RectIntersectType.BottomLeft : RectIntersectType.BottomRight;
+        }
+        else
+        {
+            throw new Exception();
+        }
+    }
 
+    public static bool IsOpposite(this RectIntersectType t, RectIntersectType tt) => t.ToString().ToLower().StartsWith("top") && tt.ToString().ToLower().StartsWith("bottom") ||
+                                                                                     tt.ToString().ToLower().StartsWith("top")  && t.ToString().ToLower().StartsWith("bottom") ||
+                                                                                     t.ToString().ToLower().StartsWith("left")  && tt.ToString().ToLower().StartsWith("right") ||
+                                                                                     tt.ToString().ToLower().StartsWith("left") && t.ToString().ToLower().StartsWith("right");
+}
+
+public static class DoubleExtensions
+{
+    public static bool IsLessThan(this float a, float b, float tolerance = 0.00005f)
+    {
+        return a - b < -tolerance;
+    }
+
+    public static bool IsLessThanOrEqual(this float a, float b, float tolerance = 0.00005f)
+    {
+        var result = a - b;
+
+        return result < -tolerance || Math.Abs(result) < tolerance;
+    }
+
+    public static bool IsGreaterThan(this float a, float b, float tolerance = 0.00005f)
+    {
+        return a - b > tolerance;
+    }
+
+    public static bool IsGreaterThanOrEqual(this float a, float b, float tolerance = 0.00005f)
+    {
+        var result = a - b;
+        return result > tolerance || Math.Abs(result) < tolerance;
+    }
+
+    public static bool IsEqual(this float a, float b, float tolerance = 0.00005f)
+    {
+        return Math.Abs(a - b) < tolerance;
+    }
 }
 
 
