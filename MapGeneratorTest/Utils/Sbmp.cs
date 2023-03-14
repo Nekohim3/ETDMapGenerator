@@ -91,7 +91,7 @@ public class Sbmp : IDisposable
 
     public void DrawLine(SKPoint start, SKPoint end, SKColor color, int strokeThickness)
     {
-        var paintStroke = new SKPaint() {Color = color, Style = SKPaintStyle.Stroke, StrokeWidth = strokeThickness};
+        var paintStroke = new SKPaint() {Color = color, Style = SKPaintStyle.Stroke, StrokeWidth = strokeThickness, StrokeCap = SKStrokeCap.Square};
         _canvas.DrawLine(start, end, paintStroke);
     }
 

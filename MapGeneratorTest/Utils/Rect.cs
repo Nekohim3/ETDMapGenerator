@@ -33,7 +33,15 @@ public enum RectIntersectType
     RightTop = 4,
     RightBottom = 5,
     BottomLeft = 6,
-    BottomRight = 7
+    BottomRight = 7,
+    None = 8
+}
+
+public enum LineType
+{
+    Diagonal = 0,
+    Vertical = 1,
+    Horizontal = 2,
 }
 
 public static class RectangleExtension
@@ -67,6 +75,8 @@ public static class RectangleExtension
                                                                     new SKLineI(r.Right, r.Top,    r.Right, r.Bottom),
                                                                     new SKLineI(r.Left,  r.Bottom, r.Right, r.Bottom)
                                                                 };
+
+    public static LineType GetLineType(this SKLineI l) => l.Start.X == l.End.X ? LineType.Vertical : l.Start.Y == l.End.Y ? LineType.Horizontal : LineType.Diagonal;
 
     public static double GetAngleToRect(this SKRectI  r, SKRectI  other) => GetAngleTo(r.GetMidPoint(), other.GetMidPoint());
     public static double GetAngleTo(this     SKPoint p, SKPoint other)
@@ -230,7 +240,7 @@ public static class RectangleExtension
         }
         else
         {
-            throw new Exception();
+            return RectIntersectType.None;
         }
     }
 

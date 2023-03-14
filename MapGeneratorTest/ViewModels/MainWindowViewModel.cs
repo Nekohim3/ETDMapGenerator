@@ -18,18 +18,24 @@ namespace MapGeneratorTest.ViewModels
         }
 
         public ReactiveCommand<Unit, Unit> RegenerateMapCmd { get; }
+        public ReactiveCommand<Unit, Unit> RegenerateRandMapCmd { get; }
 
 
 
         public MainWindowViewModel()
         {
-            RegenerateMapCmd = ReactiveCommand.Create(OnRegenerateMap);
-            Map              = new Map(10, 10, 30, 30, 4, 8, 30, 50);
+            RegenerateMapCmd     = ReactiveCommand.Create(OnRegenerateMap);
+            RegenerateRandMapCmd = ReactiveCommand.Create(OnRegenerateRandMap);
+            Map                  = new Map(10, 10, 30, 30, 4, 8, 6, 20);
         }
 
         private void OnRegenerateMap()
         {
             Map.GenerateMap();
+        }
+        private void OnRegenerateRandMap()
+        {
+            Map.GenerateRandMap();
         }
     }
 }

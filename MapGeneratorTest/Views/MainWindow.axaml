@@ -43,7 +43,8 @@
 				<TextBox Grid.Row="9" Grid.Column="1" Text="{Binding Map.MaxDistanceFromCornerToCorridor}" MinWidth="50" HorizontalContentAlignment="Center"/>
 				<TextBlock Grid.Row="10" Grid.Column="0" Text="Seed"/>
 				<TextBox Grid.Row="10" Grid.Column="1" Text="{Binding Map.Seed}" MinWidth="50" HorizontalContentAlignment="Center"/>
-				<Button Grid.Row="20" Grid.Column="0" Grid.ColumnSpan="2" Content="Generate" Command="{Binding RegenerateMapCmd}"/>
+				<Button Grid.Row="20" Grid.Column="0" Content="Generate" Command="{Binding RegenerateMapCmd}"/>
+                <Button Grid.Row="20" Grid.Column="1" Content="Generate Rand" Command="{Binding RegenerateRandMapCmd}"/>
 			</Grid>
         </Grid>
 
