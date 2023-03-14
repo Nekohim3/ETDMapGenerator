@@ -57,9 +57,9 @@ public static class RectangleExtension
     public static SKPointI GetMidPointI(this SKRectI r)                   => new(r.MidX, r.MidY);
     public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with {X = p.X + x, Y = p.Y + y};
 
-    public static SKPointI GetXYStepsCount(this SKRectI r, SKRectI other) => new SKPointI(Math.Abs(r.MidX - other.MidX), Math.Abs(r.MidY - other.MidX));
-    public static int      GetStepsCount(this   SKRectI r, SKRectI other) => GetXYStepsCount(r, other).X + GetXYStepsCount(r, other).Y;
-
+    public static SKPointI GetXYStepsCount(this   SKRectI r, SKRectI other) => new SKPointI(Math.Abs(r.MidX - other.MidX), Math.Abs(r.MidY - other.MidX));
+    public static int      GetStepsCount(this     SKRectI r, SKRectI other) => GetXYStepsCount(r, other).X + GetXYStepsCount(r, other).Y;
+    public static float    GetDistanceToRect(this SKRectI r, SKRectI other) => (new SKPoint(r.MidX, r.MidY) - new SKPoint(other.MidX, other.MidY)).Length;
     public static List<SKLineI> GetRectLines(this SKRectI r) => new List<SKLineI>()
                                                                 {
                                                                     new SKLineI(r.Left,  r.Top,    r.Left,  r.Bottom),
