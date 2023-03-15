@@ -12,12 +12,18 @@ namespace MapGeneratorTest.Utils
         public SKPoint Start { get; set; }
         public SKPoint End { get; set; }
 
-        public double Length => Math.Sqrt(Math.Pow(Start.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
+        public float Length => (float)Math.Sqrt(Math.Pow(Start.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
 
         public SKLine(SKPoint start, SKPoint end)
         {
             Start = start;
             End   = end;
+        }
+
+        public SKLine(float sx, float sy, float ex, float ey)
+        {
+            Start = new SKPoint(sx, sy);
+            End   = new SKPoint(ex, ey);
         }
 
         public static implicit operator SKLine(SKLineI l) => new SKLine(new SKPoint(l.Start.X, l.Start.Y), new SKPoint(l.End.X, l.End.Y));
@@ -40,5 +46,7 @@ namespace MapGeneratorTest.Utils
             Start = new SKPointI(sx, sy);
             End   = new SKPointI(ex, ey);
         }
+
+        public static implicit operator SKLine(SKLineI l) => new SKLine(l.Start.X, l.Start.Y, l.End.X, l.End.Y);
     }
 }

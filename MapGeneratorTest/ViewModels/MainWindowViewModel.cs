@@ -31,6 +31,7 @@ namespace MapGeneratorTest.ViewModels
 
         private void OnRegenerateMap()
         {
+            
             Map.GenerateMap();
         }
         private void OnRegenerateRandMap()
