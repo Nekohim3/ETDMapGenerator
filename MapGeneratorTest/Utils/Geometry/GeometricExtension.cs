@@ -10,7 +10,7 @@ using ReactiveUI;
 using SkiaSharp;
 using Avalonia.Controls.Shapes;
 
-namespace MapGeneratorTest.Utils;
+namespace MapGeneratorTest.Utils.Geometry;
 
 //public enum AngleDirection
 //{
@@ -24,59 +24,79 @@ namespace MapGeneratorTest.Utils;
 //    NW = 7
 //}
 
-public enum RectIntersectType
+public static class Extensions
 {
-    LeftTop = 0,
-    LeftBottom = 1,
-    TopLeft = 2,
-    TopRight = 3,
-    RightTop = 4,
-    RightBottom = 5,
-    BottomLeft = 6,
-    BottomRight = 7,
-    None = 8
-}
+    #region Rectangle
 
-public enum LineType
-{
-    Diagonal = 0,
-    Vertical = 1,
-    Horizontal = 2,
-}
-public static class GeometricExtension
-{
-    public static SKRectI ExpandLeft(this   SKRectI r, int left)   => r with { Left = r.Left    - left };
-    public static SKRectI ExpandTop(this    SKRectI r, int top)    => r with { Top = r.Top      - top };
-    public static SKRectI ExpandRight(this  SKRectI r, int right)  => r with { Right = r.Right  + right};
-    public static SKRectI ExpandBottom(this SKRectI r, int bottom) => r with {Bottom = r.Bottom + bottom};
-    public static SKRectI ExpandWidth(this  SKRectI r, int width)                                => r.ExpandLeft(width).ExpandRight(width);
-    public static SKRectI ExpandHeight(this SKRectI r, int height)                               => r.ExpandTop(height).ExpandBottom(height);
-    public static SKRectI ExpandAll(this    SKRectI r, int n)                                    => r.ExpandWidth(n).ExpandHeight(n);
-    public static SKRectI Expand(this       SKRectI r, int left, int top, int right, int bottom) => r.ExpandLeft(left).ExpandTop(top).ExpandRight(right).ExpandBottom(bottom);
+    public static SKRectI        ExpandLeft(this        SKRectI r, int left)                                 => r with {Left = r.Left     - left};
+    public static SKRectI        ExpandTop(this         SKRectI r, int top)                                  => r with {Top = r.Top       - top};
+    public static SKRectI        ExpandRight(this       SKRectI r, int right)                                => r with {Right = r.Right   + right};
+    public static SKRectI        ExpandBottom(this      SKRectI r, int bottom)                               => r with {Bottom = r.Bottom + bottom};
+    public static SKRectI        ExpandWidth(this       SKRectI r, int width)                                => r.ExpandLeft(width).ExpandRight(width);
+    public static SKRectI        ExpandHeight(this      SKRectI r, int height)                               => r.ExpandTop(height).ExpandBottom(height);
+    public static SKRectI        ExpandAll(this         SKRectI r, int n)                                    => r.ExpandWidth(n).ExpandHeight(n);
+    public static SKRectI        Expand(this            SKRectI r, int left, int top, int right, int bottom) => r.ExpandLeft(left).ExpandTop(top).ExpandRight(right).ExpandBottom(bottom);
+    public static SKPoint        GetMidPoint(this       SKRectI r)                => new(r.MidX, r.MidY);
+    public static float          GetDistanceToRect(this SKRectI r, SKRectI other) => (new SKPoint(r.MidX, r.MidY) - new SKPoint(other.MidX, other.MidY)).Length;
+    public static List<SKLineI>  GetRectLines(this      SKRectI r) => new() { new SKLineI(r.Left, r.Top, r.Left, r.Bottom), new SKLineI(r.Left, r.Top, r.Right, r.Top), new SKLineI(r.Right, r.Top, r.Right, r.Bottom), new SKLineI(r.Left, r.Bottom, r.Right, r.Bottom) };
+    public static List<SKPointI> GetRectPoints(this     SKRectI r) => new() { new SKPointI(r.Left, r.Top), new SKPointI(r.Right, r.Top), new SKPointI(r.Right, r.Bottom), new SKPointI(r.Left, r.Bottom) };
 
-    public static SKPoint GetMidPoint(this SKRectI r)                   => new(r.MidX, r.MidY);
-    public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with {X = p.X + x, Y = p.Y + y};
-    public static float    GetDistanceToRect(this SKRectI r, SKRectI other) => (new SKPoint(r.MidX, r.MidY) - new SKPoint(other.MidX, other.MidY)).Length;
-    public static List<SKLineI> GetRectLines(this SKRectI r) => new()
-                                                                {
-                                                                    new SKLineI(r.Left,  r.Top,    r.Left,  r.Bottom),
-                                                                    new SKLineI(r.Left,  r.Top,    r.Right, r.Top),
-                                                                    new SKLineI(r.Right, r.Top,    r.Right, r.Bottom),
-                                                                    new SKLineI(r.Left,  r.Bottom, r.Right, r.Bottom)
-                                                                };
-
-    public static List<SKPointI> GetRectPoints(this SKRectI r) => new()
+    public static int GetRectCoord(this SKRectI r, RectDirection d) => d switch
                                                                   {
-                                                                      new SKPointI(r.Left, r.Top),
-                                                                      new SKPointI(r.Right, r.Top),
-                                                                      new SKPointI(r.Right, r.Bottom),
-                                                                      new SKPointI(r.Left, r.Bottom)
+                                                                      RectDirection.Left   => r.Left,
+                                                                      RectDirection.Top    => r.Top,
+                                                                      RectDirection.Right  => r.Right,
+                                                                      RectDirection.Bottom => r.Bottom,
+                                                                      _                    => throw new ArgumentOutOfRangeException(nameof(d), d, null)
                                                                   };
 
-    public static LineType GetLineType(this SKLineI l) => l.Start.X == l.End.X ? LineType.Vertical : l.Start.Y == l.End.Y ? LineType.Horizontal : LineType.Diagonal;
-    
+    #region RoundRectangle
+
+    public static bool IntersectsWith(this SKExpandRoundRectI rr, SKRectI r)
+    {
+        var rects = new List<SKRectI> { rr.InnerRect.ExpandLeft(rr.ExpandXY), rr.InnerRect.ExpandRight(rr.ExpandXY), rr.InnerRect.ExpandTop(rr.ExpandXY), rr.InnerRect.ExpandBottom(rr.ExpandXY) };
+        if (rects.Any(r.IntersectsWith))
+            return true;
+        var circles = rr.GetCircles();
+        return circles.Any(_ => r.GetRectLines().Any(_.IntersectsWith));
+    }
+
+    #endregion
+
+    #endregion
+
+    #region Circle
 
 
+    public static bool IntersectsWith(this SKCircleI c, SKLineI l)
+    {
+        var lineType = l.GetLineType();
+        switch (lineType)
+        {
+            case LineDirection.Vertical:
+                for (var i = l.Start.Y < l.End.Y ? l.Start.Y : l.End.Y; l.Start.Y < l.End.Y ? i < l.End.Y : i < l.Start.Y; i -= l.Start.Y.CompareTo(l.End.Y))
+                    if (c.Point.DistanceTo(new SKPointI(l.Start.X, i)) <= c.Radius)
+                        return true;
+                break;
+            case LineDirection.Horizontal:
+                for (var i = l.Start.X < l.End.X ? l.Start.X : l.End.X; l.Start.X < l.End.X ? i < l.End.X : i < l.Start.X; i -= l.Start.X.CompareTo(l.End.X))
+                    if (c.Point.DistanceTo(new SKPointI(i, l.Start.Y)) <= c.Radius)
+                        return true;
+                break;
+            case LineDirection.Diagonal:
+                throw new Exception();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        return false;
+    }
+
+    #endregion
+
+    #region Line
+
+    public static LineDirection GetLineType(this SKLineI l) => l.Start.X == l.End.X ? LineDirection.Vertical : l.Start.Y == l.End.Y ? LineDirection.Horizontal : LineDirection.Diagonal;
     public static SKPoint IsIntersect(this SKLineI l, SKLineI other, float tolerance = 0.00005f)
     {
         bool IsInsideLine(SKLineI line, SKPoint p, float tol)
@@ -89,13 +109,15 @@ public static class GeometricExtension
             var rightX = line.End.X;
             var rightY = line.End.Y;
 
-            return (x.IsGreaterThanOrEqual(leftX,     tol) && x.IsLessThanOrEqual(rightX, tol)
-                    || x.IsGreaterThanOrEqual(rightX, tol) && x.IsLessThanOrEqual(leftX,  tol))
-                   && (y.IsGreaterThanOrEqual(leftY,     tol) && y.IsLessThanOrEqual(rightY, tol)
-                       || y.IsGreaterThanOrEqual(rightY, tol) && y.IsLessThanOrEqual(leftY,  tol));
+            return ((x.IsGreaterThanOrEqual(leftX, tol) && x.IsLessThanOrEqual(rightX, tol))
+                    || (x.IsGreaterThanOrEqual(rightX, tol) && x.IsLessThanOrEqual(leftX, tol)))
+                   && ((y.IsGreaterThanOrEqual(leftY, tol) && y.IsLessThanOrEqual(rightY, tol))
+                       || (y.IsGreaterThanOrEqual(rightY, tol) && y.IsLessThanOrEqual(leftY, tol)));
         }
-        if (l.Start == other.Start && l.End == other.End) throw new Exception("Both lines are the same.");
-        
+
+        if (l.Start == other.Start && l.End == other.End)
+            throw new Exception("Both lines are the same.");
+
         if (l.Start.X.CompareTo(other.Start.X) > 0)
             (l, other) = (other, l);
         else if (l.Start.X.CompareTo(other.Start.X) == 0)
@@ -116,7 +138,7 @@ public static class GeometricExtension
                 IsInsideLine(other, firstIntersection, tolerance))
                 return new SKPoint(x3, y3);
         }
-        
+
         if (y1.IsEqual(y2) && y3.IsEqual(y4) && y1.IsEqual(y3))
         {
             var firstIntersection = new SKPoint(x3, y3);
@@ -124,10 +146,12 @@ public static class GeometricExtension
                 IsInsideLine(other, firstIntersection, tolerance))
                 return new SKPoint(x3, y3);
         }
-        
-        if (x1.IsEqual(x2) && x3.IsEqual(x4)) return default;
-        
-        if (y1.IsEqual(y2) && y3.IsEqual(y4)) return default;
+
+        if (x1.IsEqual(x2) && x3.IsEqual(x4))
+            return default;
+
+        if (y1.IsEqual(y2) && y3.IsEqual(y4))
+            return default;
 
         float x, y;
         if (x1.IsEqual(x2))
@@ -146,7 +170,6 @@ public static class GeometricExtension
         }
         else
         {
-
             var m1 = (y2 - y1) / (x2 - x1);
             var c1 = -m1 * x1 + y1;
             var m2 = (y4 - y3) / (x4 - x3);
@@ -168,68 +191,55 @@ public static class GeometricExtension
         return default;
     }
 
-    public static RectIntersectType GetRectIntersectType(this SKRectI r, SKLineI l)
+    #endregion
+
+    #region Point
+
+    public static SKPoint OffsetPoint(this SKPoint  p, float    x, float y) => p with { X = p.X + x, Y = p.Y + y };
+    public static float   DistanceTo(this  SKPointI p, SKPointI pp) => new SKLineI(p, pp).Length;
+
+    #endregion
+
+    #region Other
+
+    public static bool IsOpposite(this (RectDirection line, RectDirection side) a, (RectDirection line, RectDirection side) b) => (int)a.line % 2 == (int)b.line % 2 && a.line != b.line;
+    public static (RectDirection line, RectDirection side) GetRectIntersectType(this SKRectI r, SKLineI l)
     {
-        var lines = r.GetRectLines().Select(_ => _.IsIntersect(l)).ToList();
-        if (lines[0] != default)
-        {
-            return r.MidY > lines[0].Y ? RectIntersectType.LeftTop : RectIntersectType.LeftBottom;
-        }
-        else if (lines[1] != default)
-        {
-            return r.MidX > lines[1].X ? RectIntersectType.TopLeft : RectIntersectType.TopRight;
-        }
-        else if (lines[2] != default)
-        {
-            return r.MidY > lines[2].Y ? RectIntersectType.RightTop : RectIntersectType.RightBottom;
-        }
-        else if (lines[3] != default)
-        {
-            return r.MidX > lines[3].X ? RectIntersectType.BottomLeft : RectIntersectType.BottomRight;
-        }
-        else
-        {
-            return RectIntersectType.None;
-        }
+        var intersections = r.GetRectLines().Select(_ => _.IsIntersect(l)).ToList();
+        var point         = intersections.FirstOrDefault(_ => _ != default);
+        if (point == default)
+            throw new Exception();
+        var index = intersections.IndexOf(point);
+        return ((RectDirection)index, index % 2 == 0 ? r.MidY > point.Y ? RectDirection.Top : RectDirection.Bottom : r.MidX > point.X ? RectDirection.Left : RectDirection.Right);
     }
 
-    public static bool IsOpposite(this RectIntersectType t, RectIntersectType tt) => t.ToString().ToLower().StartsWith("top") && tt.ToString().ToLower().StartsWith("bottom") ||
-                                                                                     tt.ToString().ToLower().StartsWith("top")  && t.ToString().ToLower().StartsWith("bottom") ||
-                                                                                     t.ToString().ToLower().StartsWith("left")  && tt.ToString().ToLower().StartsWith("right") ||
-                                                                                     tt.ToString().ToLower().StartsWith("left") && t.ToString().ToLower().StartsWith("right");
+    #endregion
+
+    #region Numbers
+
+    #region Float
+
+    public static bool IsLessThan(this float a, float b, float tolerance = 0.00005f) => a - b < -tolerance;
+    public static bool IsLessThanOrEqual(this float a, float b, float tolerance = 0.00005f) => a - b < -tolerance || Math.Abs(a - b) < tolerance;
+    public static bool IsGreaterThan(this float a, float b, float tolerance = 0.00005f) => a - b > tolerance;
+    public static bool IsGreaterThanOrEqual(this float a, float b, float tolerance = 0.00005f) => a - b > tolerance || Math.Abs(a - b) < tolerance;
+    public static bool IsEqual(this float a, float b, float tolerance = 0.00005f) => Math.Abs(a - b) < tolerance;
+
+    #endregion
+
+    #region Double
+
+    public static bool IsLessThan(this           double a, double b, double tolerance = 0.00005f) => a - b < -tolerance;
+    public static bool IsLessThanOrEqual(this    double a, double b, double tolerance = 0.00005f) => a - b < -tolerance || Math.Abs(a - b) < tolerance;
+    public static bool IsGreaterThan(this        double a, double b, double tolerance = 0.00005f) => a - b > tolerance;
+    public static bool IsGreaterThanOrEqual(this double a, double b, double tolerance = 0.00005f) => a - b > tolerance || Math.Abs(a - b) < tolerance;
+    public static bool IsEqual(this              double a, double b, double tolerance = 0.00005f) => Math.Abs(a - b) < tolerance;
+
+    #endregion
+
+    #endregion
+    
 }
-
-public static class DoubleExtensions
-{
-    public static bool IsLessThan(this float a, float b, float tolerance = 0.00005f)
-    {
-        return a - b < -tolerance;
-    }
-
-    public static bool IsLessThanOrEqual(this float a, float b, float tolerance = 0.00005f)
-    {
-        var result = a - b;
-
-        return result < -tolerance || Math.Abs(result) < tolerance;
-    }
-
-    public static bool IsGreaterThan(this float a, float b, float tolerance = 0.00005f)
-    {
-        return a - b > tolerance;
-    }
-
-    public static bool IsGreaterThanOrEqual(this float a, float b, float tolerance = 0.00005f)
-    {
-        var result = a - b;
-        return result > tolerance || Math.Abs(result) < tolerance;
-    }
-
-    public static bool IsEqual(this float a, float b, float tolerance = 0.00005f)
-    {
-        return Math.Abs(a - b) < tolerance;
-    }
-}
-
 
 //public static float GetAngleToRect(this SKRectI  r, SKRectI  other) => GetAngleTo(r.GetMidPoint(), other.GetMidPoint());
 //public static float GetAngleTo(this SKPoint p, SKPoint other)
@@ -351,7 +361,6 @@ public static class DoubleExtensions
 
 //    public static SKPoint OffsetPoint(this SKPoint p, float x, float y) => p with { X = p.X + x, Y = p.Y + y };
 //    public static SKPointI OffsetPoint(this SKPointI p, int x, int y) => p with { X = p.X + x, Y = p.Y + y };
-
 
 //    //public static CropRectangle SetLeft(this   CropRectangle r, int left) => r with { X = left, Width = r.Width + r.Left   - left };
 //    //public static CropRectangle SetTop(this    CropRectangle r, int top) => r with { Y =  top, Height = r.Height + r.Top - top };
