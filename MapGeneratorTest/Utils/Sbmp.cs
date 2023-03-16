@@ -50,6 +50,7 @@ public class Sbmp : IDisposable
         var fillRect  = new SKRectI(rect.Left + gapX + strokeThickness, rect.Top + gapY + strokeThickness, rect.Right - gapX - strokeThickness, rect.Bottom - gapY - strokeThickness);
         var paintFill = new SKPaint() {Style = SKPaintStyle.Fill, Color = fillColor};
         _canvas.DrawRect(fillRect, paintFill);
+        //_canvas.DrawRoundRect(fillRect, 50,50, paintFill);
 
         if (strokeThickness == 0)
             return;
@@ -67,6 +68,7 @@ public class Sbmp : IDisposable
         var fillRect  = new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
         var paintFill = new SKPaint() {Style = SKPaintStyle.Fill, Color = fillColor};
         _canvas.DrawRect(fillRect, paintFill);
+        //_canvas.DrawRoundRect(fillRect, 5, 5, paintFill);
     }
 
     public void DrawFillRectangle(int left, int top, int right, int bottom, SKColor fillColor) =>
@@ -96,6 +98,7 @@ public class Sbmp : IDisposable
     }
 
     #endregion
+    
 
     #region Text
 

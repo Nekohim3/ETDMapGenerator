@@ -157,7 +157,12 @@ public class Map : ViewModelBase
 
     public Map(int roomMinW, int roomMinH, int roomMaxW, int roomMaxH, int minRoomCount, int maxRoomCount, int minDistanceBetweenRooms, int maxDistanceBetweenRooms, int seed = 0)
     {
-        //var l1   = new SKLine(new SKPoint(0,  0), new SKPoint(10,        10));
+        var r    = new SKRectI(100, 100, 200, 200);
+        var r1   = new SKRectI(0,   0,   99,  99);
+        var i1  = r.IntersectsWith(r1);
+        var rr   = new SKRoundRect(r, 10);
+        
+            //var l1   = new SKLine(new SKPoint(0,  0), new SKPoint(10,        10));
         //var l2   = new SKLine(new SKPoint(10, 0), new SKPoint(5.000001f, 5));
         //var q    = l1.IsIntersect(l2);
         //var qq   = new SKRectI();

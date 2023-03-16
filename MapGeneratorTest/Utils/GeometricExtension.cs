@@ -75,6 +75,8 @@ public static class GeometricExtension
 
     public static LineType GetLineType(this SKLineI l) => l.Start.X == l.End.X ? LineType.Vertical : l.Start.Y == l.End.Y ? LineType.Horizontal : LineType.Diagonal;
     
+
+
     public static SKPoint IsIntersect(this SKLineI l, SKLineI other, float tolerance = 0.00005f)
     {
         bool IsInsideLine(SKLineI line, SKPoint p, float tol)
