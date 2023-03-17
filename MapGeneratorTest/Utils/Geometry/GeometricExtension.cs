@@ -41,14 +41,15 @@ public static class Extensions
     public static List<SKLineI>  GetRectLines(this      SKRectI r) => new() { new SKLineI(r.Left, r.Top, r.Left, r.Bottom), new SKLineI(r.Left, r.Top, r.Right, r.Top), new SKLineI(r.Right, r.Top, r.Right, r.Bottom), new SKLineI(r.Left, r.Bottom, r.Right, r.Bottom) };
     public static List<SKPointI> GetRectPoints(this     SKRectI r) => new() { new SKPointI(r.Left, r.Top), new SKPointI(r.Right, r.Top), new SKPointI(r.Right, r.Bottom), new SKPointI(r.Left, r.Bottom) };
 
-    public static int GetRectCoord(this SKRectI r, RectDirection d) => d switch
-                                                                  {
-                                                                      RectDirection.Left   => r.Left,
-                                                                      RectDirection.Top    => r.Top,
-                                                                      RectDirection.Right  => r.Right,
-                                                                      RectDirection.Bottom => r.Bottom,
-                                                                      _                    => throw new ArgumentOutOfRangeException(nameof(d), d, null)
-                                                                  };
+    public static int GetRectCoord(this SKRectI r, RectDirection d) => r.GetRectCoord((int)d);
+    public static int GetRectCoord(this SKRectI r, int d) => d switch
+                                                                       {
+                                                                           0   => r.Left,
+                                                                           1    => r.Top,
+                                                                           2  => r.Right,
+                                                                           3 => r.Bottom,
+                                                                           _                    => throw new ArgumentOutOfRangeException(nameof(d), d, null)
+                                                                       };
 
     #region RoundRectangle
 
@@ -202,15 +203,16 @@ public static class Extensions
 
     #region Other
 
-    public static bool IsOpposite(this (RectDirection line, RectDirection side) a, (RectDirection line, RectDirection side) b) => (int)a.line % 2 == (int)b.line % 2 && a.line != b.line;
-    public static (RectDirection line, RectDirection side) GetRectIntersectType(this SKRectI r, SKLineI l)
+    public static bool IsOpposite(this (RectDirection line, RectDirection side)                       a, (RectDirection line, RectDirection side)                       b) => (int)a.line % 2 == (int)b.line % 2 && a.line != b.line;
+    public static bool IsOpposite(this ((RectDirection e, int i) line, (RectDirection e, int i) side) a, ((RectDirection e, int i) line, (RectDirection e, int i) side) b) => a.line.i % 2 == b.line.i % 2 && a.line.i != b.line.i;
+    public static ((RectDirection e, int i) line, (RectDirection e, int i) side) GetRectIntersectType(this SKRectI r, SKLineI l)
     {
         var intersections = r.GetRectLines().Select(_ => _.IsIntersect(l)).ToList();
         var point         = intersections.FirstOrDefault(_ => _ != default);
         if (point == default)
             throw new Exception();
         var index = intersections.IndexOf(point);
-        return ((RectDirection)index, index % 2 == 0 ? r.MidY > point.Y ? RectDirection.Top : RectDirection.Bottom : r.MidX > point.X ? RectDirection.Left : RectDirection.Right);
+        return (((RectDirection)index, index), index % 2 == 0 ? r.MidY > point.Y ? (RectDirection.Top, 1) : (RectDirection.Bottom, 3) : r.MidX > point.X ? (RectDirection.Left, 0) : (RectDirection.Right, 2));
     }
 
     #endregion

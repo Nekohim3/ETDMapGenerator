@@ -12,7 +12,7 @@ namespace MapGeneratorTest.Utils.Geometry
         public SKPoint Start { get; set; }
         public SKPoint End { get; set; }
 
-        public float Length => (float)Math.Sqrt(Math.Pow(Start.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
+        public float Length => (float)Math.Sqrt(Math.Pow(End.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
 
         public SKLine(SKPoint start, SKPoint end)
         {
@@ -33,7 +33,7 @@ namespace MapGeneratorTest.Utils.Geometry
         public SKPointI Start { get; set; }
         public SKPointI End { get; set; }
 
-        public float Length => (float)Math.Sqrt(Math.Pow(Start.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
+        public float Length => (float)Math.Sqrt(Math.Pow(End.Y - Start.Y, 2) + Math.Pow(End.X - Start.X, 2));
 
         public SKLineI(SKPointI start, SKPointI end)
         {

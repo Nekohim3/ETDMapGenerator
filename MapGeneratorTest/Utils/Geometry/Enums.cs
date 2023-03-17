@@ -36,7 +36,7 @@ namespace MapGeneratorTest.Utils.Geometry
         Diagonal   = 2
     }
 
-    public enum RectDirection
+    public enum RectDirection : int
     {
         Left   = 0,
         Top    = 1,

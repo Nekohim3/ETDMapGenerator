@@ -26,7 +26,7 @@ namespace MapGeneratorTest.ViewModels
         {
             RegenerateMapCmd     = ReactiveCommand.Create(OnRegenerateMap);
             RegenerateRandMapCmd = ReactiveCommand.Create(OnRegenerateRandMap);
-            Map                  = new Map(10, 10, 30, 30, 4, 8, 6, 20);
+            Map                  = new Map(10, 10, 30, 30, 4, 8, 50, 70);
         }
 
         private void OnRegenerateMap()

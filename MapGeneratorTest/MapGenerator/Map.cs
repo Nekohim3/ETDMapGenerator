@@ -276,131 +276,136 @@ public class Map : ViewModelBase
                     var lines = new List<SKLineI>();
                     if (xp.IsOpposite(cp))
                     {
-                        var output = GetRand(x.Rect.GetRectCoord(xp.side) - ((float)xp.side).CompareTo(1.1f), (int)xp.line % 2 == 0 ? x.Rect.MidX : x.Rect.MidY);
-                        var br     = GetRand();
-                        var input  = GetRand(x.Rect.GetRectCoord(xp.side + ((int)xp.side <= 1 ? 2 : -2)) - ((float)xp.side + ((int)xp.side <= 1 ? 2 : -2)).CompareTo(1.1f), (int)xp.line % 2 == 0 ? x.Rect.MidX : x.Rect.MidY);
-                    }
+                        var output = GetRand(x.Rect.GetRectCoord(xp.side.i) - ((float)xp.side.i).CompareTo(1.1f), xp.line.i % 2 == 0 ? x.Rect.MidY : x.Rect.MidX);
+                        var input  = GetRand(c.Rect.GetRectCoord(cp.side.i) - ((float)cp.side.i).CompareTo(1.1f), cp.line.i % 2 == 0 ? c.Rect.MidY : c.Rect.MidX);
+                        var br = GetRand((xp.line.i < 2 ? c : x).Rect.GetRectCoord(xp.line.i % 2 + 2) + ((xp.line.i < 2 ? x : c).Rect.GetRectCoord(xp.line.i % 2) - (xp.line.i < 2 ? c : x).Rect.GetRectCoord(xp.line.i % 2 + 2)) * (1 / (float)3),
+                                         (xp.line.i < 2 ? c : x).Rect.GetRectCoord(xp.line.i % 2 + 2) + ((xp.line.i < 2 ? x : c).Rect.GetRectCoord(xp.line.i % 2) - (xp.line.i < 2 ? c : x).Rect.GetRectCoord(xp.line.i % 2 + 2)) * (2 / (float)3));
+                        lines.Add(new SKLineI(xp.line.i % 2 == 0 ? x.Rect.GetRectCoord(xp.line.i) - (xp.line.i == 0 ? 1 : 0) : output, xp.line.i % 2 == 1 ? x.Rect.GetRectCoord(xp.line.i) - (xp.line.i == 1 ? 1 : 0) : output, xp.line.i % 2 == 0 ? br : output, xp.line.i % 2 == 1 ? br : output));
+                        lines.Add(new SKLineI(xp.line.i % 2 == 0 ? br : output, xp.line.i % 2 == 1 ? br : output, xp.line.i % 2 == 0 ? br : input, xp.line.i % 2 == 1 ? br : input));
+                        lines.Add(new SKLineI(xp.line.i % 2 == 0 ? br : input, xp.line.i % 2 == 1 ? br : input, xp.line.i % 2 == 0 ? c.Rect.GetRectCoord(cp.line.i) - (cp.line.i < 2 ? 1 : 0) : input, xp.line.i % 2 == 1 ? c.Rect.GetRectCoord(cp.line.i)                                                                   - (cp.line.i < 2 ? 1 : 0) : input));
+                        Passes.Add(new Pass(x, c, lines.ToArray()));
+                    }                         
                     else
                     {
-                        
+                        Passes.Add(new Pass(x, c, new SKLineI(x.Rect.MidX, x.Rect.MidY, c.Rect.MidX, c.Rect.MidY)));
                     }
                 }
             }
         }
 
-        //foreach (var x in Passes)
-        //{
-        //    if (x.LineList.Count > 0)
-        //    {
-        //        var lt = x.LineList[0].GetLineType();
-        //        var lineList = new List<SKLineI>();
-        //        if (x.LineList.Count == 1)
-        //        {
-        //            switch (lt)
-        //            {
-        //                case LineDirection.Diagonal:
-        //                    break;
-        //                case LineDirection.Vertical:
-        //                    lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
-        //                                     ? new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y)
-        //                                     : new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
-        //                    break;
-        //                case LineDirection.Horizontal:
-        //                    lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
-        //                                     ? new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1)
-        //                                     : new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
-        //                    break;
-        //                default:
-        //                    throw new ArgumentOutOfRangeException();
-        //            }
+        foreach (var x in Passes)
+        {
+            if (x.LineList.Count > 0)
+            {
+                var lt = x.LineList[0].GetLineType();
+                var lineList = new List<SKLineI>();
+                if (x.LineList.Count == 1)
+                {
+                    switch (lt)
+                    {
+                        case LineDirection.Diagonal:
+                            break;
+                        case LineDirection.Vertical:
+                            lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
+                                             ? new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y)
+                                             : new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
+                            break;
+                        case LineDirection.Horizontal:
+                            lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
+                                             ? new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1)
+                                             : new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
 
-        //        }
-        //        else
-        //        {
-        //            if (x.LineList.Count == 2)
-        //            {
-        //                switch (lt)
-        //                {
-        //                    case LineDirection.Diagonal:
-        //                        break;
-        //                    case LineDirection.Vertical:
-        //                        if (x.LineList[1].Start.X > x.LineList[0].Start.X)
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
-        //                            lineList.Add(new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y + 1, x.LineList[1].End.X, x.LineList[1].End.Y + 1));
-        //                        }
-        //                        else
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y));
-        //                            lineList.Add(new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y - 1, x.LineList[1].End.X, x.LineList[1].End.Y - 1));
-        //                        }
-        //                        break;
-        //                    case LineDirection.Horizontal:
-        //                        if (x.LineList[1].Start.Y > x.LineList[0].Start.Y)
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
-        //                            lineList.Add(new SKLineI(x.LineList[1].Start.X + 1, x.LineList[1].Start.Y, x.LineList[1].End.X + 1, x.LineList[1].End.Y));
-        //                        }
-        //                        else
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1));
-        //                            lineList.Add(new SKLineI(x.LineList[1].Start.X - 1, x.LineList[1].Start.Y, x.LineList[1].End.X - 1, x.LineList[1].End.Y));
-        //                        }
-        //                        break;
-        //                    default:
-        //                        throw new ArgumentOutOfRangeException();
-        //                }
-        //            }
-        //            else if (x.LineList.Count == 3)
-        //            {
-        //                switch (lt)
-        //                {
-        //                    case LineDirection.Diagonal:
-        //                        break;
-        //                    case LineDirection.Vertical:
-        //                        if (x.LineList[0].Start.X < x.LineList[2].Start.X)
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
-        //                            lineList.Add(new SKLineI(x.LineList[2].Start.X - 1, x.LineList[2].Start.Y, x.LineList[2].End.X - 1, x.LineList[2].End.Y));
-        //                        }
-        //                        else
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y));
-        //                            lineList.Add(new SKLineI(x.LineList[2].Start.X + 1, x.LineList[2].Start.Y, x.LineList[2].End.X + 1, x.LineList[2].End.Y));
-        //                        }
+                }
+                else
+                {
+                    if (x.LineList.Count == 2)
+                    {
+                        switch (lt)
+                        {
+                            case LineDirection.Diagonal:
+                                break;
+                            case LineDirection.Vertical:
+                                if (x.LineList[1].Start.X > x.LineList[0].Start.X)
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
+                                    lineList.Add(new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y + 1, x.LineList[1].End.X, x.LineList[1].End.Y + 1));
+                                }
+                                else
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y));
+                                    lineList.Add(new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y - 1, x.LineList[1].End.X, x.LineList[1].End.Y - 1));
+                                }
+                                break;
+                            case LineDirection.Horizontal:
+                                if (x.LineList[1].Start.Y > x.LineList[0].Start.Y)
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
+                                    lineList.Add(new SKLineI(x.LineList[1].Start.X + 1, x.LineList[1].Start.Y, x.LineList[1].End.X + 1, x.LineList[1].End.Y));
+                                }
+                                else
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1));
+                                    lineList.Add(new SKLineI(x.LineList[1].Start.X - 1, x.LineList[1].Start.Y, x.LineList[1].End.X - 1, x.LineList[1].End.Y));
+                                }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    else if (x.LineList.Count == 3)
+                    {
+                        switch (lt)
+                        {
+                            case LineDirection.Diagonal:
+                                break;
+                            case LineDirection.Vertical:
+                                if (x.LineList[0].Start.X < x.LineList[2].Start.X)
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X + 1, x.LineList[0].Start.Y, x.LineList[0].End.X + 1, x.LineList[0].End.Y));
+                                    lineList.Add(new SKLineI(x.LineList[2].Start.X - 1, x.LineList[2].Start.Y, x.LineList[2].End.X - 1, x.LineList[2].End.Y));
+                                }
+                                else
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X - 1, x.LineList[0].Start.Y, x.LineList[0].End.X - 1, x.LineList[0].End.Y));
+                                    lineList.Add(new SKLineI(x.LineList[2].Start.X + 1, x.LineList[2].Start.Y, x.LineList[2].End.X + 1, x.LineList[2].End.Y));
+                                }
 
-        //                        lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
-        //                                         ? new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y - 1, x.LineList[1].End.X, x.LineList[1].End.Y - 1)
-        //                                         : new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y + 1, x.LineList[1].End.X, x.LineList[1].End.Y + 1));
-        //                        break;
-        //                    case LineDirection.Horizontal:
-        //                        if (x.LineList[0].Start.Y < x.LineList[2].Start.Y)
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
-        //                            lineList.Add(new SKLineI(x.LineList[2].Start.X, x.LineList[2].Start.Y - 1, x.LineList[2].End.X, x.LineList[2].End.Y - 1));
-        //                        }
-        //                        else
-        //                        {
-        //                            lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1));
-        //                            lineList.Add(new SKLineI(x.LineList[2].Start.X, x.LineList[2].Start.Y + 1, x.LineList[2].End.X, x.LineList[2].End.Y + 1));
-        //                        }
+                                lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
+                                                 ? new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y - 1, x.LineList[1].End.X, x.LineList[1].End.Y - 1)
+                                                 : new SKLineI(x.LineList[1].Start.X, x.LineList[1].Start.Y + 1, x.LineList[1].End.X, x.LineList[1].End.Y + 1));
+                                break;
+                            case LineDirection.Horizontal:
+                                if (x.LineList[0].Start.Y < x.LineList[2].Start.Y)
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y + 1, x.LineList[0].End.X, x.LineList[0].End.Y + 1));
+                                    lineList.Add(new SKLineI(x.LineList[2].Start.X, x.LineList[2].Start.Y - 1, x.LineList[2].End.X, x.LineList[2].End.Y - 1));
+                                }
+                                else
+                                {
+                                    lineList.Add(new SKLineI(x.LineList[0].Start.X, x.LineList[0].Start.Y - 1, x.LineList[0].End.X, x.LineList[0].End.Y - 1));
+                                    lineList.Add(new SKLineI(x.LineList[2].Start.X, x.LineList[2].Start.Y + 1, x.LineList[2].End.X, x.LineList[2].End.Y + 1));
+                                }
 
-        //                        lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
-        //                                         ? new SKLineI(x.LineList[1].Start.X - 1, x.LineList[1].Start.Y, x.LineList[1].End.X - 1, x.LineList[1].End.Y)
-        //                                         : new SKLineI(x.LineList[1].Start.X + 1, x.LineList[1].Start.Y, x.LineList[1].End.X + 1, x.LineList[1].End.Y));
-        //                        break;
-        //                    default:
-        //                        throw new ArgumentOutOfRangeException();
-        //                }
-        //            }
-        //            else
-        //            {
-        //                throw new Exception();
-        //            }
-        //        }
-        //        x.LineList.AddRange(lineList);
-        //    }
-        //}
+                                lineList.Add(_rand.Next(int.MinValue, int.MaxValue) % 2 == 0
+                                                 ? new SKLineI(x.LineList[1].Start.X - 1, x.LineList[1].Start.Y, x.LineList[1].End.X - 1, x.LineList[1].End.Y)
+                                                 : new SKLineI(x.LineList[1].Start.X + 1, x.LineList[1].Start.Y, x.LineList[1].End.X + 1, x.LineList[1].End.Y));
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
+                }
+                x.LineList.AddRange(lineList);
+            }
+        }
 
         return false;
     }
@@ -775,13 +780,13 @@ public class Map : ViewModelBase
         {
             foreach (var c in x.LineList)
             {
-                sbmp.DrawLine(new SKPointI(c.Start.X, c.Start.Y), new SKPointI(c.End.X, c.End.Y), new SKColor(0x55,0x55,0x55,0xff), 1);
+                sbmp.DrawLine(new SKPointI(c.Start.X, c.Start.Y), new SKPointI(c.End.X, c.End.Y), c.GetLineType() == LineDirection.Horizontal  ? new SKColor(255, 0x55, 0x55, 100) : new SKColor(0x55, 255, 0x55, 100), 1);
             }
             //sbmp.DrawLine(new SKPointI(x.StartRoom.Rect.Left + x.Start.X, x.StartRoom.Rect.Top + x.Start.Y), new SKPointI(x.EndRoom.Rect.Left + x.End.X, x.EndRoom.Rect.Top + x.End.Y), new SKColor(0, 50, 255, 255), 1);
         }
 
-        //for (var i = 0; i < Rooms.Count; i++)
-            //sbmp.DrawText(Rooms[i].Name, Rooms[i].Rect.GetMidPoint().OffsetPoint(-3.5f, 3.5f), SKColors.White, 10);
+        for (var i = 0; i < Rooms.Count; i++)
+            sbmp.DrawText(Rooms[i].Name, Rooms[i].Rect.GetMidPoint().OffsetPoint(-3.5f, 3.5f), SKColors.White, 10);
 
         return sbmp;
     }
